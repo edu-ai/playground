@@ -20,9 +20,6 @@ def main(env_setup_dict):
     # Make the "Search" environment using the agent list and setup parameters
     env = pommerman.make('Search-v0', agent_list, env_setup=env_setup_dict)
 
-    # import implemented search algorithm
-    search_function = None
-
     # Construct a clean slate environment
     initial_state = env.reset()
     done = False
@@ -34,7 +31,8 @@ def main(env_setup_dict):
     # obtain list of actions to take from search algorithm
     # search_algo_1 corresponds to A* Search
     # search_algo_2 corresponds to BFS
-    actions = search_algo_1.search(
+
+    actions = search_algo_2.search(
         initial_state[0]['board'], initial_state[0]['position'])
 
     # Monitor time elapsed
@@ -47,7 +45,11 @@ def main(env_setup_dict):
         return (elapsed_time, '-', done)
 
     # Iterate through agent actions and environment observations
-    for i in range(len(actions)):
+    for i in range(int(env_setup_dict['max_steps'])):
+        # When agent finishes before max_steps
+        if (done):
+            break
+
         curr_action = [actions[i]]
         env.render()
         state, reward, done, info = env.step(curr_action)
