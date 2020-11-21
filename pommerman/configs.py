@@ -19,23 +19,21 @@ from . import characters
 
 def search_v0_env(setup_dict=None):
     """Start up a Search Environment config with input settings."""
-    # only one item should be present in env, which is the goal item
-    NUM_GOAL_ITEMS = 1
-    # Set to 0 for current iteration of testbed
-    NUM_BREAKABLE_WALLS = 0
     env = envs.v0.Pomme
     game_type = constants.GameType.Search
     env_entry_point = 'pommerman.envs.v0:Pomme'
     env_id = 'Search-v0'
+
+    # TODO: add randomseed kwarg and test customisation with existing environments as well
     env_kwargs = {
         'game_type': game_type,
         'board_size': int(setup_dict['board_size']),
         'num_rigid': int(setup_dict['num_rigid_walls']),
-        'num_wood': NUM_BREAKABLE_WALLS,
-        'num_items': NUM_GOAL_ITEMS,
+        'num_wood': int(setup_dict['num_breakable_walls']),
+        'num_items': int(setup_dict['num_goal_items']),
         'max_steps': int(setup_dict['max_steps']),
         'render_fps': constants.RENDER_FPS,
-        'env': env_entry_point,
+        'env': env_entry_point
     }
     agent = characters.Bomber
     return locals()

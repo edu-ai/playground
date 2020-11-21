@@ -64,11 +64,11 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
     def lay_wall(value, num_left, coordinates, board):
         '''Lays all of the walls on a board'''
         if (game_type == constants.GameType.Search):
-            random.seed(size)  # random seed based on size of board
-            x, y = random.sample(coordinates, 1)[0]
-            coordinates.remove((x, y))
+            # random seed based on size of board
+            random.seed(size)
+            y, x = random.sample(coordinates, 1)[0]
             coordinates.remove((y, x))
-            board[x, y] = value
+            board[y, x] = value
             num_left -= 1
         else:
             assert (num_rigid % 2 == 0)
@@ -157,6 +157,14 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
 
     # Make sure it's possible to reach most of the passages.
     while len(inaccessible_passages(board, agents)) > 4:
+        # To prevent infinite recursion as random seed will sieve out same positions for walls, therefore change num walls
+        if (game_type == constants.GameType.Search):
+            num_rigid = max(0, num_rigid - 1)
+            num_wood = max(0, num_wood - 1)
+            print(
+                f"Too many walls selected, too many inaccessible cells, setting num rigid walls to {num_rigid}" +
+                f" and num wooden walls to {num_wood}")
+
         board, agents = make(size, num_rigid, num_wood, num_agents)
 
     return board
@@ -169,7 +177,7 @@ def make_items(board, num_items, game_type):
 
     while num_items > 0:
         if (game_type == constants.GameType.Search):
-            random.seed((len(board) - num_attempts) // 2)
+            random.seed((len(board) - num_attempts) ** 2)
             row = random.randint(0, len(board) - 1)
             col = random.randint(0, len(board[0]) - 1)
             num_attempts += 1
@@ -177,20 +185,20 @@ def make_items(board, num_items, game_type):
             if board[row, col] == constants.Item.Passage.value:
                 item_positions[(row, col)] = constants.Item.Kick.value
                 num_items -= 1
+        else:
+            row = random.randint(0, len(board) - 1)
+            col = random.randint(0, len(board[0]) - 1)
+            if board[row, col] != constants.Item.Wood.value:
+                continue
+            if (row, col) in item_positions:
                 continue
 
-        row = random.randint(0, len(board) - 1)
-        col = random.randint(0, len(board[0]) - 1)
-        if board[row, col] != constants.Item.Wood.value:
-            continue
-        if (row, col) in item_positions:
-            continue
+            item_positions[(row, col)] = random.choice([
+                constants.Item.ExtraBomb, constants.Item.IncrRange,
+                constants.Item.Kick
+            ]).value
+            num_items -= 1
 
-        item_positions[(row, col)] = random.choice([
-            constants.Item.ExtraBomb, constants.Item.IncrRange,
-            constants.Item.Kick
-        ]).value
-        num_items -= 1
     return item_positions
 
 

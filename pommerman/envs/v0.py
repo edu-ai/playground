@@ -168,9 +168,10 @@ class Pomme(gym.Env):
             self.make_items()
             if (self._game_type == constants.GameType.Search):
                 # need to preinstantiate board with goal item
-                goal_position = list(self._items.keys())[0]
-                item_value = self._items.get(goal_position)
-                self._board[goal_position] = item_value
+                goal_positions = list(self._items.keys())
+                for goal_position in goal_positions:
+                    item_value = self._items.get(goal_position)
+                    self._board[goal_position] = item_value
 
             self._bombs = []
             self._flames = []
