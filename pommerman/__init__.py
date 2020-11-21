@@ -18,11 +18,14 @@ def _register(env_setup=None):
 
     for name, f in inspect.getmembers(configs, inspect.isfunction):
         if (not name.endswith('_env')) or (name == 'search_v0_env' and env_setup is None):
+            # check made to ensure only env configs are considered and
+            # search env is not registered without valid env_setup
             continue
 
         config = f(env_setup)
         
         if (config['env_id'] in REGISTRY):
+            # check made to ensure the same env is not registered twice
             continue
         
         gym.envs.registration.register(
