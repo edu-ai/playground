@@ -5,8 +5,8 @@ import json
 import csv
 import multiprocessing
 import time
-import search_algo_1
-import search_algo_2
+# from a0123456Z import Search
+from a6543210Z import Search
 
 
 def main(env_setup_dict):
@@ -29,11 +29,12 @@ def main(env_setup_dict):
     start_time = time.time()
 
     # obtain list of actions to take from search algorithm
-    # search_algo_1 corresponds to A* Search
-    # search_algo_2 corresponds to BFS
+    board = initial_state[0]['board']
+    initial_position = initial_state[0]['position']
 
-    actions = search_algo_2.search(
-        initial_state[0]['board'], initial_state[0]['position'])
+    s = Search(board, initial_position)
+    m = s.matric_num
+    actions = s.search()
 
     # Monitor time elapsed
     current_time = time.time()
