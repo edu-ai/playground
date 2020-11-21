@@ -36,7 +36,7 @@ class PommermanJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
+def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None, random_seed=None):
     """Make the random but symmetric board.
 
     The numbers refer to the Item enum in constants. This is:
@@ -64,8 +64,8 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
     def lay_wall(value, num_left, coordinates, board):
         '''Lays all of the walls on a board'''
         if (game_type == constants.GameType.Search):
-            # random seed based on size of board
-            random.seed(size)
+            # random_seed value based on custom input param of parent make_board method, originally from JSON argument
+            random.seed(random_seed)
             y, x = random.sample(coordinates, 1)[0]
             coordinates.remove((y, x))
             board[y, x] = value
@@ -170,14 +170,15 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
     return board
 
 
-def make_items(board, num_items, game_type):
+def make_items(board, num_items, game_type, random_seed):
     '''Lays all of the items on the board'''
     item_positions = {}
     num_attempts = 0
 
     while num_items > 0:
         if (game_type == constants.GameType.Search):
-            random.seed((len(board) - num_attempts) ** 2)
+            # need to mutate random seed else same locations are being chosen
+            random.seed((random_seed - num_attempts) ** 2)
             row = random.randint(0, len(board) - 1)
             col = random.randint(0, len(board[0]) - 1)
             num_attempts += 1

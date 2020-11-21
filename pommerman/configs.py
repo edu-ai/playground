@@ -32,6 +32,7 @@ def search_v0_env(setup_dict=None):
         'num_wood': int(setup_dict['num_breakable_walls']),
         'num_items': int(setup_dict['num_goal_items']),
         'max_steps': int(setup_dict['max_steps']),
+        'random_seed': int(setup_dict['random_seed']),
         'render_fps': constants.RENDER_FPS,
         'env': env_entry_point
     }

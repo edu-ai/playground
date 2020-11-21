@@ -23,11 +23,11 @@ def _register(env_setup=None):
             continue
 
         config = f(env_setup)
-        
+
         if (config['env_id'] in REGISTRY):
             # check made to ensure the same env is not registered twice
             continue
-        
+
         gym.envs.registration.register(
             id=config['env_id'],
             entry_point=config['env_entry_point'],
@@ -48,7 +48,16 @@ def make(config_id, agent_list, game_state_file=None, render_mode='human', env_s
 
     assert config_id in REGISTRY, "Unknown configuration '{}'. " \
         "Possible values: {}".format(config_id, REGISTRY)
+    
     env = gym.make(config_id)
+
+    # Find out if current env is search env
+    is_search_env = env.spec._kwargs['game_type'] == constants.GameType.Search
+
+    # Only search env has a random_seed kwarg
+    random_seed = None
+    if (is_search_env):
+        random_seed = env.spec._kwargs['random_seed']
 
     for id_, agent in enumerate(agent_list):
         assert isinstance(agent, agents.BaseAgent)
@@ -59,6 +68,8 @@ def make(config_id, agent_list, game_state_file=None, render_mode='human', env_s
     env.set_init_game_state(game_state_file)
     env.set_render_mode(render_mode)
     return env
-    
+
+
 # DO NOT MOVE THIS LINE
 from . import cli
+

@@ -36,7 +36,8 @@ class Pomme(gym.Env):
                  max_steps=1000,
                  is_partially_observable=False,
                  env=None,
-                 **kwargs):
+                 random_seed=None,
+                 ** kwargs):
         self._render_fps = render_fps
         self._intended_actions = []
         self._agents = None
@@ -48,6 +49,7 @@ class Pomme(gym.Env):
         self._num_items = num_items
         self._max_steps = max_steps
         self._viewer = None
+        self._random_seed = random_seed
         self._is_partially_observable = is_partially_observable
         self._env = env
         self.training_agent = None
@@ -101,7 +103,7 @@ class Pomme(gym.Env):
     def set_training_agent(self, agent_id):
         self.training_agent = agent_id
 
-    def set_init_game_state(self, game_state_file):
+    def set_init_game_state(self, game_state_file, random_seed=None):
         """Set the initial game state.
 
         The expected game_state_file JSON format is:
@@ -125,11 +127,11 @@ class Pomme(gym.Env):
 
     def make_board(self):
         self._board = utility.make_board(self._board_size, self._num_rigid,
-                                         self._num_wood, len(self._agents), self._game_type)
+                                         self._num_wood, len(self._agents), self._game_type, self._random_seed)
 
     def make_items(self):
         self._items = utility.make_items(
-            self._board, self._num_items, self._game_type)
+            self._board, self._num_items, self._game_type, self._random_seed)
 
     def act(self, obs):
         agents = [agent for agent in self._agents
