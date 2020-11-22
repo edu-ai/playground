@@ -5,8 +5,9 @@ import heapq
 # A Star Search implementation
 class Search(object):
     def __init__(self, board, initial_position):
-        self.board = board,
-        self.initial_position = initial_position
+        self.board = board
+        self.position = (initial_position[0], initial_position[1])
+        self.actions = []
         # TODO: FILL IN YOUR MATRICULATION NUMBER (AXXXXXXXX) HERE
         self.matric_num = "A0123456Z"
         """
@@ -15,7 +16,7 @@ class Search(object):
         self.PASSAGE = 0  # any plain cell that a player can pass through
         self.RIGID_WALL = 1  # a wall that cannot be passed through or bombed
         self.PLAYER = 10  # the agent
-        self.GOAL_ITEM = 8  # the goal item that will mark the end of the game
+        self.GOAL_ITEM = 6  # the goal item that will mark the end of the game
 
         """
         Actions that you will need to include in your returned list object.
@@ -27,7 +28,6 @@ class Search(object):
 
     # driver function that will be called by runner script
     def evaluate_search(self, script_name):
-        print(script_name)
         output = {}
         output['actions'] = self.search()
 
@@ -38,6 +38,7 @@ class Search(object):
     def search(self):
         """
         Compute the sequence of actions required for agent to move to the cell containing a goal item.
+        If there are multiple goal items, compute the sequence of actions required for agent to pass through all goal items.
 
         Useful inputs:
             board:
@@ -56,14 +57,13 @@ class Search(object):
             actions: A list of valid integer actions. Do refer to the definition of valid actions near the top of the file.
         """
         # to extract 2d matrix from class array object
-        board = self.board[0]
+        board = self.board
 
-        goal_position = self.find_goal_position(board)
+        while (self.find_goal_position(board) != (-1, -1)):
+            goal_position = self.find_goal_position(board)
+            self.astar_search(board, self.position, goal_position)
 
-        while True:
-            continue
-
-        return self.astar_search(board, self.initial_position, goal_position)
+        return self.actions
 
     # performs A star search with manhattan distance heuristic
     def astar_search(self, board, initial_position, goal_position):
@@ -92,7 +92,10 @@ class Search(object):
                 minimum_cost_by_position[node_position] = node_total_cost
 
             if (self.is_goal(node_position, goal_position)):
-                return node_path
+                self.actions = self.actions + node_path
+                self.position = node_position
+                self.board[node_position] = self.PASSAGE
+                break
 
             expanded.add(node_position)
 
@@ -153,8 +156,26 @@ class Search(object):
 
     # finds goal position from board matrix
     def find_goal_position(self, board):
+        all_goal_positions = []
+
         # process 2d list
         for y in range(len(board)):
             for x in range(len(board[0])):
                 if(board[y][x] == self.GOAL_ITEM):
-                    return (y, x)
+                    all_goal_positions.append((y, x))
+
+        if (len(all_goal_positions) == 0):
+            # signals end of search
+            return (-1, -1)
+
+        curr_position = self.position
+
+        manhattan_distance_from_agent_position = list(map(
+            lambda pos: self.get_manhattan_distance(curr_position, pos), all_goal_positions))
+        nearest_goal_index = manhattan_distance_from_agent_position.index(
+            min(manhattan_distance_from_agent_position))
+
+        return all_goal_positions[nearest_goal_index]
+
+    # You may add more helper methods but do ensure the driver function returns the list of valid integer actions
+    # Also make sure you fill up your Matric Number in the init method of this file

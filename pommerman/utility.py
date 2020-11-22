@@ -174,6 +174,7 @@ def make_items(board, num_items, game_type, random_seed):
     '''Lays all of the items on the board'''
     item_positions = {}
     num_attempts = 0
+    board_copy = board.copy()
 
     while num_items > 0:
         if (game_type == constants.GameType.Search):
@@ -184,8 +185,13 @@ def make_items(board, num_items, game_type, random_seed):
             num_attempts += 1
 
             if board[row, col] == constants.Item.Passage.value:
-                item_positions[(row, col)] = constants.Item.Kick.value
-                num_items -= 1
+                item_position = (row, col)
+                is_accessible = is_goal_accessible(board, (row, col))
+                if (is_accessible):
+                    item_positions[(row, col)] = constants.Item.ExtraBomb.value
+                    board_copy[row, col] = constants.Item.ExtraBomb.value
+                    num_items -= 1
+
         else:
             row = random.randint(0, len(board) - 1)
             col = random.randint(0, len(board[0]) - 1)
@@ -232,8 +238,35 @@ def inaccessible_passages(board, agent_positions):
     return positions
 
 
+# Assume Goal is ExtraBomb and Agent Position is (1 , 1)
+def is_goal_accessible(board, goal_position):
+    """Return inaccessible goals on this board for Search environments"""
+    seen = set()
+    agent_position = (1, 1)
+
+    # Breadth first search from agent position to goal position
+    Q = [agent_position]
+    while Q:
+        row, col = Q.pop()
+        for (i, j) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            next_position = (row + i, col + j)
+            if next_position in seen:
+                continue
+            if not position_on_board(board, next_position):
+                continue
+            if position_is_rigid(board, next_position):
+                continue
+            if next_position == goal_position:
+                return True
+
+            seen.add(next_position)
+            Q.append(next_position)
+
+    return False
+
+
 def is_valid_direction(board, position, direction, invalid_values=None):
-    '''Determins if a move is in a valid direction'''
+    '''Determines if a move is in a valid direction'''
     row, col = position
     if invalid_values is None:
         invalid_values = [item.value for item in

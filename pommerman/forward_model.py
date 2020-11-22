@@ -572,7 +572,7 @@ class ForwardModel(object):
         return observations
 
     @staticmethod
-    def get_done(agents, step_count, max_steps, game_type, training_agent):
+    def get_done(agents, step_count, max_steps, game_type, training_agent, num_items):
         alive = [agent for agent in agents if agent.is_alive]
         alive_ids = sorted([agent.agent_id for agent in alive])
         if step_count >= max_steps:
@@ -580,8 +580,11 @@ class ForwardModel(object):
         elif game_type == constants.GameType.Search:
             agent = agents[0]
 
-            # if any attributes improved from default values, it means item was picked up
-            return agent.ammo == 2 or agent.blast_strength == 3 or agent.can_kick
+            # default_ammo = 1
+            # since all items in this mode = ammo, episode is done when agent.ammo = default + num_items
+            # Pommerman max acceptable ammo is 10, therefore max num items 9
+            return agent.ammo == min(1 + num_items, 10)
+
         elif game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             if training_agent is not None and training_agent not in alive_ids:
                 return True

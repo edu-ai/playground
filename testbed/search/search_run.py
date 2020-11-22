@@ -64,13 +64,14 @@ def main(env_setup_dict, search_script):
     if (not has_exceeded_time):
         # Obtain search_script output actions sequence
         with open(f'{script_name}.json') as json_file:
-            actions = list(json.load(json_file)['actions'])
+            output_from_script = json.load(json_file)
+            if ('actions' in output_from_script.keys()):
+                actions = list(output_from_script['actions'])
 
         # Iterate through agent actions and environment observations
         for i in range(int(env_setup_dict['max_steps'])):
-            if (done):
+            if (i >= len(actions) or done):
                 break  # When agent finishes before max_steps
-
             curr_action = [actions[i]]
             env.render()  # comment out this line if you do not want GUI to render
             state, reward, done, info = env.step(curr_action)

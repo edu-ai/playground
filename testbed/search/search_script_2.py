@@ -5,8 +5,9 @@ import queue
 # Breadth First Search implementation
 class Search(object):
     def __init__(self, board, initial_position):
-        self.board = board,
-        self.initial_position = initial_position
+        self.board = board
+        self.position = initial_position
+        self.actions = []
         # TODO: FILL IN YOUR MATRICULATION NUMBER (AXXXXXXXX) HERE
         self.matric_num = "A6543210Z"
         """
@@ -15,7 +16,7 @@ class Search(object):
         self.PASSAGE = 0  # any plain cell that a player can pass through
         self.RIGID_WALL = 1  # a wall that cannot be passed through or bombed
         self.PLAYER = 10  # the agent
-        self.GOAL_ITEM = 8  # the goal item that will mark the end of the game
+        self.GOAL_ITEM = 6  # the goal item that will mark the end of the game
 
         """
         Actions that you will need to include in your returned list object.
@@ -37,6 +38,7 @@ class Search(object):
     def search(self):
         """
         Compute the sequence of actions required for agent to move to the cell containing a goal item.
+        If there are multiple goal items, compute the sequence of actions required for agent to pass through all goal items.
 
         Useful inputs:
             board:
@@ -55,15 +57,20 @@ class Search(object):
             actions: A list of valid integer actions. Do refer to the definition of valid actions near the top of the file.
         """
         # to extract 2d matrix from class array object
-        board = self.board[0]
+        board = self.board
 
-        goal_position = self.find_goal_position(board)
-        return self.breadth_first_search(board, self.initial_position, goal_position)
+        while (self.find_goal_position(board) != (-1, -1)):
+            goal_position = self.find_goal_position(board)
+            self.breadth_first_search(board, self.position, goal_position)
+
+        return self.actions
 
     # performs breadth first search
     def breadth_first_search(self, board, initial_position, goal_position):
         if (self.is_goal(initial_position, goal_position)):
-            return []
+            self.position = initial_position
+            self.board[initial_position] = self.PASSAGE
+            return
 
         # define every node to be a tuple with the following structure: (path cost, (position, actions taken))
         frontier = queue.Queue()
@@ -73,7 +80,9 @@ class Search(object):
         frontier.put((0, (initial_position, [])))
         frontier_coordinates.add(initial_position)
 
-        while not frontier.empty():
+        goal_found = False
+
+        while not frontier.empty() and not goal_found:
             node = frontier.get()
             node_position = node[1][0]
             frontier_coordinates.remove(node_position)
@@ -95,7 +104,11 @@ class Search(object):
                               (child_position, new_path))
 
                 if (self.is_goal(child_position, goal_position)):
-                    return new_path
+                    self.actions = self.actions + new_path
+                    self.position = child_position
+                    self.board[child_position] = self.PASSAGE
+                    goal_found = True
+                    break
 
                 if (child_position not in frontier_coordinates and child_position not in expanded):
                     frontier_coordinates.add(child_position)
@@ -126,12 +139,37 @@ class Search(object):
     def is_goal(self, position, goal_position):
         return position == goal_position
 
+    # gets manhattan distance between current position and goal position
+    def get_manhattan_distance(self, curr_position, goal_position):
+        if (curr_position == goal_position):
+            return 0
+        else:
+            num_horizontal_moves = abs(goal_position[1] - curr_position[1])
+            num_vertical_moves = abs(goal_position[0] - curr_position[0])
+            return num_horizontal_moves + num_vertical_moves
+
     # finds goal position from board matrix
     def find_goal_position(self, board):
+        all_goal_positions = []
+
+        # process 2d list
         for y in range(len(board)):
             for x in range(len(board[0])):
                 if(board[y][x] == self.GOAL_ITEM):
-                    return (y, x)
+                    all_goal_positions.append((y, x))
 
-        # You may add more helper methods but do ensure the driver function returns the list of valid integer actions
-        # Also make sure you fill up your Matric Number in the init method of this file
+        if (len(all_goal_positions) == 0):
+            # signals end of search
+            return (-1, -1)
+
+        curr_position = self.position
+
+        manhattan_distance_from_agent_position = list(map(
+            lambda pos: self.get_manhattan_distance(curr_position, pos), all_goal_positions))
+        nearest_goal_index = manhattan_distance_from_agent_position.index(
+            min(manhattan_distance_from_agent_position))
+
+        return all_goal_positions[nearest_goal_index]
+
+    # You may add more helper methods but do ensure the driver function returns the list of valid integer actions
+    # Also make sure you fill up your Matric Number in the init method of this file

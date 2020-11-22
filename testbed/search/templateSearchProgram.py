@@ -1,4 +1,6 @@
 import json
+
+
 class Search(object):
     def __init__(self, board, initial_position):
         self.board = board,
@@ -11,7 +13,7 @@ class Search(object):
         self.PASSAGE = 0  # any plain cell that a player can pass through
         self.RIGID_WALL = 1  # a wall that cannot be passed through or bombed
         self.PLAYER = 10  # the agent
-        self.GOAL_ITEM = 8  # the goal item that will mark the end of the game
+        self.GOAL_ITEM = 6  # the goal item that will mark the end of the game
 
         """
         Actions that you will need to include in your returned list object.
@@ -35,6 +37,7 @@ class Search(object):
     def search(self):
         """
         Compute the sequence of actions required for agent to move to the cell containing a goal item.
+        If there are multiple goal items, compute the sequence of actions required for agent to pass through all goal items.
 
         Useful inputs:
             board:
