@@ -1,3 +1,4 @@
+import json
 import queue
 
 
@@ -25,6 +26,14 @@ class Search(object):
         self.RIGHT = 4
 
     # driver function that will be called by runner script
+    def evaluate_search(self, script_name):
+        output = {}
+        output['actions'] = self.search()
+
+        with open(f'{script_name}.json', 'w') as outfile:
+            json.dump(output, outfile)
+
+    # The method to implement
     def search(self):
         """
         Compute the sequence of actions required for agent to move to the cell containing a goal item.
