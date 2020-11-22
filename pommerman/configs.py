@@ -24,7 +24,6 @@ def search_v0_env(setup_dict=None):
     env_entry_point = 'pommerman.envs.v0:Pomme'
     env_id = 'Search-v0'
 
-    # TODO: add randomseed kwarg and test customisation with existing environments as well
     env_kwargs = {
         'game_type': game_type,
         'board_size': int(setup_dict['board_size']),
