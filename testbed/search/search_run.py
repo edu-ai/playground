@@ -1,4 +1,4 @@
-'''A script that runs a game where the simple agent searches optimal path to powerup'''
+'''A script that runs a game where the search agent searches optimal path to powerup or powerups'''
 import pommerman
 from pommerman import agents
 import json

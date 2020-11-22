@@ -24,8 +24,6 @@ class Search(object):
         self.RIGHT = 4
 
     # driver function that will be called by runner script
-
-    # driver function that will be called by runner script
     def evaluate_search(self, script_name):
         output = {}
         output['actions'] = self.search()
