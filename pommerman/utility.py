@@ -36,7 +36,7 @@ class PommermanJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
+def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None, random_seed=None):
     """Make the random but symmetric board.
 
     The numbers refer to the Item enum in constants. This is:
@@ -63,12 +63,22 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
     def lay_wall(value, num_left, coordinates, board):
         '''Lays all of the walls on a board'''
-        x, y = random.sample(coordinates, 1)[0]
-        coordinates.remove((x, y))
-        coordinates.remove((y, x))
-        board[x, y] = value
-        board[y, x] = value
-        num_left -= 2
+        if (game_type == constants.GameType.Search):
+            # random_seed value based on custom input param of parent make_board method, originally from JSON argument
+            random.seed(random_seed)
+            y, x = random.sample(coordinates, 1)[0]
+            coordinates.remove((y, x))
+            board[y, x] = value
+            num_left -= 1
+        else:
+            assert (num_rigid % 2 == 0)
+            assert (num_wood % 2 == 0)
+            x, y = random.sample(coordinates, 1)[0]
+            coordinates.remove((x, y))
+            coordinates.remove((y, x))
+            board[x, y] = value
+            board[y, x] = value
+            num_left -= 2
         return num_left
 
     def make(size, num_rigid, num_wood, num_agents):
@@ -79,16 +89,16 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         # Gather all the possible coordinates to use for walls.
         coordinates = set([
-            (x, y) for x, y in \
-            itertools.product(range(size), range(size)) \
+            (x, y) for x, y in
+            itertools.product(range(size), range(size))
             if x != y])
 
-        # Set the players down. Exclude them from coordinates.
-        # Agent0 is in top left. Agent1 is in bottom left.
-        # Agent2 is in bottom right. Agent 3 is in top right.
-        assert (num_agents % 2 == 0)
+        assert (num_agents % 2 == 0 or num_agents == 1)
 
-        if num_agents == 2:
+        if num_agents == 1:
+            board[1, 1] = constants.Item.Agent0.value
+            agents = [(1, 1)]
+        elif num_agents == 2:
             board[1, 1] = constants.Item.Agent0.value
             board[size - 2, size - 2] = constants.Item.Agent1.value
             agents = [(1, 1), (size - 2, size - 2)]
@@ -97,7 +107,8 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
             board[size - 2, 1] = constants.Item.Agent1.value
             board[size - 2, size - 2] = constants.Item.Agent2.value
             board[1, size - 2] = constants.Item.Agent3.value
-            agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+            agents = [(1, 1), (size - 2, 1),
+                      (1, size - 2), (size - 2, size - 2)]
 
         for position in agents:
             if position in coordinates:
@@ -142,33 +153,59 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         return board, agents
 
-    assert (num_rigid % 2 == 0)
-    assert (num_wood % 2 == 0)
     board, agents = make(size, num_rigid, num_wood, num_agents)
 
     # Make sure it's possible to reach most of the passages.
     while len(inaccessible_passages(board, agents)) > 4:
+        # To prevent infinite recursion as random seed will sieve out same positions for walls, therefore change num walls
+        if (game_type == constants.GameType.Search):
+            num_rigid = max(0, num_rigid - 1)
+            num_wood = max(0, num_wood - 1)
+            print(
+                f"Too many walls selected, too many inaccessible cells, setting num rigid walls to {num_rigid}" +
+                f" and num wooden walls to {num_wood}")
+
         board, agents = make(size, num_rigid, num_wood, num_agents)
 
     return board
 
 
-def make_items(board, num_items):
+def make_items(board, num_items, game_type, random_seed):
     '''Lays all of the items on the board'''
     item_positions = {}
-    while num_items > 0:
-        row = random.randint(0, len(board) - 1)
-        col = random.randint(0, len(board[0]) - 1)
-        if board[row, col] != constants.Item.Wood.value:
-            continue
-        if (row, col) in item_positions:
-            continue
+    num_attempts = 0
+    board_copy = board.copy()
 
-        item_positions[(row, col)] = random.choice([
-            constants.Item.ExtraBomb, constants.Item.IncrRange,
-            constants.Item.Kick
-        ]).value
-        num_items -= 1
+    while num_items > 0:
+        if (game_type == constants.GameType.Search):
+            # need to mutate random seed else same locations are being chosen
+            random.seed((random_seed - num_attempts) ** 2)
+            row = random.randint(0, len(board) - 1)
+            col = random.randint(0, len(board[0]) - 1)
+            num_attempts += 1
+
+            if board[row, col] == constants.Item.Passage.value:
+                item_position = (row, col)
+                is_accessible = is_goal_accessible(board, (row, col))
+                if (is_accessible):
+                    item_positions[(row, col)] = constants.Item.ExtraBomb.value
+                    board_copy[row, col] = constants.Item.ExtraBomb.value
+                    num_items -= 1
+
+        else:
+            row = random.randint(0, len(board) - 1)
+            col = random.randint(0, len(board[0]) - 1)
+            if board[row, col] != constants.Item.Wood.value:
+                continue
+            if (row, col) in item_positions:
+                continue
+
+            item_positions[(row, col)] = random.choice([
+                constants.Item.ExtraBomb, constants.Item.IncrRange,
+                constants.Item.Kick
+            ]).value
+            num_items -= 1
+
     return item_positions
 
 
@@ -201,11 +238,38 @@ def inaccessible_passages(board, agent_positions):
     return positions
 
 
+# Assume Goal is ExtraBomb and Agent Position is (1 , 1)
+def is_goal_accessible(board, goal_position):
+    """Return inaccessible goals on this board for Search environments"""
+    seen = set()
+    agent_position = (1, 1)
+
+    # Breadth first search from agent position to goal position
+    Q = [agent_position]
+    while Q:
+        row, col = Q.pop()
+        for (i, j) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            next_position = (row + i, col + j)
+            if next_position in seen:
+                continue
+            if not position_on_board(board, next_position):
+                continue
+            if position_is_rigid(board, next_position):
+                continue
+            if next_position == goal_position:
+                return True
+
+            seen.add(next_position)
+            Q.append(next_position)
+
+    return False
+
+
 def is_valid_direction(board, position, direction, invalid_values=None):
-    '''Determins if a move is in a valid direction'''
+    '''Determines if a move is in a valid direction'''
     row, col = position
     if invalid_values is None:
-        invalid_values = [item.value for item in \
+        invalid_values = [item.value for item in
                           [constants.Item.Rigid, constants.Item.Wood]]
 
     if constants.Action(direction) == constants.Action.Stop:
@@ -223,7 +287,7 @@ def is_valid_direction(board, position, direction, invalid_values=None):
 
     if constants.Action(direction) == constants.Action.Right:
         return col + 1 < len(board[0]) and \
-               board[row][col + 1] not in invalid_values
+            board[row][col + 1] not in invalid_values
 
     raise constants.InvalidAction("We did not receive a valid direction: ",
                                   direction)
@@ -241,7 +305,7 @@ def position_is_flames(board, position):
 
 def position_is_bomb(bombs, position):
     """Check if a given position is a bomb.
-    
+
     We don't check the board because that is an unreliable source. An agent
     may be obscuring the bomb on the board.
     """
@@ -263,7 +327,7 @@ def position_is_powerup(board, position):
 def position_is_wall(board, position):
     '''Determins if a position is a wall tile'''
     return position_is_rigid(board, position) or \
-           position_is_wood(board, position)
+        position_is_wood(board, position)
 
 
 def position_is_passage(board, position):

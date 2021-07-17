@@ -17,7 +17,29 @@ from . import envs
 from . import characters
 
 
-def one_vs_one_env():
+def search_v0_env(setup_dict=None):
+    """Start up a Search Environment config with input settings."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.Search
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'Search-v0'
+
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': int(setup_dict['board_size']),
+        'num_rigid': int(setup_dict['num_rigid_walls']),
+        'num_wood': int(setup_dict['num_breakable_walls']),
+        'num_items': int(setup_dict['num_goal_items']),
+        'max_steps': int(setup_dict['max_steps']),
+        'random_seed': int(setup_dict['random_seed']),
+        'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point
+    }
+    agent = characters.Bomber
+    return locals()
+
+
+def one_vs_one_env(setup_dict=None):
     """Start up an OneVsOne config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.OneVsOne
@@ -37,7 +59,7 @@ def one_vs_one_env():
     return locals()
 
 
-def ffa_competition_env():
+def ffa_competition_env(setup_dict=None):
     """Start up a FFA config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
@@ -57,7 +79,7 @@ def ffa_competition_env():
     return locals()
 
 
-def ffa_competition_fast_env():
+def ffa_competition_fast_env(setup_dict=None):
     """Start up a FFA config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
@@ -77,7 +99,7 @@ def ffa_competition_fast_env():
     return locals()
 
 
-def team_competition_env():
+def team_competition_env(setup_dict=None):
     """Start up a Team config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
@@ -99,7 +121,7 @@ def team_competition_env():
     return locals()
 
 
-def team_competition_fast_env():
+def team_competition_fast_env(setup_dict=None):
     """Start up a Team config with the competition settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
@@ -121,7 +143,7 @@ def team_competition_fast_env():
     return locals()
 
 
-def team_competition_v1_env():
+def team_competition_v1_env(setup_dict=None):
     """Start up a collapsing Team config with the competition settings."""
     env = envs.v1.Pomme
     game_type = constants.GameType.Team
@@ -144,7 +166,7 @@ def team_competition_v1_env():
     return locals()
 
 
-def ffa_v0_fast_env():
+def ffa_v0_fast_env(setup_dict=None):
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
@@ -164,7 +186,7 @@ def ffa_v0_fast_env():
     return locals()
 
 
-def ffa_v1_env():
+def ffa_v1_env(setup_dict=None):
     """Start up a collapsing FFA config with the default settings."""
     env = envs.v1.Pomme
     game_type = constants.GameType.FFA
@@ -185,7 +207,7 @@ def ffa_v1_env():
     return locals()
 
 
-def team_v0_env():
+def team_v0_env(setup_dict=None):
     """Start up a team config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
@@ -205,7 +227,7 @@ def team_v0_env():
     return locals()
 
 
-def team_v0_fast_env():
+def team_v0_fast_env(setup_dict=None):
     """Start up a team config with the default settings."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
@@ -225,7 +247,7 @@ def team_v0_fast_env():
     return locals()
 
 
-def radio_v2_env():
+def radio_v2_env(setup_dict=None):
     """Start up a team radio config with the default settings."""
     env = envs.v2.Pomme
     game_type = constants.GameType.TeamRadio
@@ -249,7 +271,7 @@ def radio_v2_env():
     return locals()
 
 
-def radio_competition_env():
+def radio_competition_env(setup_dict=None):
     """Start up a team radio config with the default settings."""
     env = envs.v2.Pomme
     game_type = constants.GameType.TeamRadio

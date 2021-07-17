@@ -1,0 +1,9 @@
+{
+    "board_size": 18, 
+    "num_rigid_walls": 80,
+    "max_duration_seconds": 5,
+    "num_goal_items": 5,
+    "num_breakable_walls": 0,
+    "random_seed": 3000,
+    "max_steps": 250
+}
